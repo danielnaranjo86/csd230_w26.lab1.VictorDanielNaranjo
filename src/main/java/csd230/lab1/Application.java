@@ -1,14 +1,8 @@
 package csd230.lab1;
 
 import com.github.javafaker.Faker;
-import csd230.lab1.entities.BookEntity;
-import csd230.lab1.entities.CartEntity;
-import csd230.lab1.entities.ProductEntity;
-import csd230.lab1.entities.TicketEntity;
-import csd230.lab1.repositories.BookEntityRepository;
-import csd230.lab1.repositories.CartEntityRepository;
-import csd230.lab1.repositories.ProductEntityRepository;
-import csd230.lab1.repositories.TicketEntityRepository;
+import csd230.lab1.entities.*;
+import csd230.lab1.repositories.*;
 import jakarta.transaction.Transactional;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -23,15 +17,19 @@ public class Application implements CommandLineRunner {
     private final CartEntityRepository cartRepo;
     private final BookEntityRepository bookRepo;
     private final TicketEntityRepository ticketRepo;
+    private final GuitarEntityRepository guitarRepo;
+    private final DrumKitEntityRepository drumKitRepo;
 
     public Application(ProductEntityRepository productRepo,
                        CartEntityRepository cartRepo,
                        BookEntityRepository bookRepo,
-                       TicketEntityRepository ticketRepo) {
+                       TicketEntityRepository ticketRepo, GuitarEntityRepository guitarRepo, DrumKitEntityRepository drumKitRepo) {
         this.productRepo = productRepo;
         this.cartRepo = cartRepo;
         this.bookRepo = bookRepo;
         this.ticketRepo = ticketRepo;
+        this.guitarRepo = guitarRepo;
+        this.drumKitRepo = drumKitRepo;
     }
 
 
@@ -81,6 +79,28 @@ public class Application implements CommandLineRunner {
         cart.addProduct(ticket);
         cartRepo.save(cart);
 
+        GuitarEntity guitar = new GuitarEntity(
+                faker.company().name(),
+                faker.number().randomDouble(2, 300, 2500),
+                6
+        );
+
+        DrumKitEntity drums = new DrumKitEntity(
+                faker.company().name(),
+                faker.number().randomDouble(2, 500, 5000),
+                5
+        );
+
+        guitar = guitarRepo.save(guitar);
+        drums = drumKitRepo.save(drums);
+
+        cart.addProduct(guitar);
+        cart.addProduct(drums);
+        cartRepo.save(cart);
+
+        System.out.println("\n--- MUSICAL INSTRUMENTS ---");
+        guitar.sellItem();
+        drums.sellItem();
 
         // -------------------------
         // READ
