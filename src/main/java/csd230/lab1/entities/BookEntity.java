@@ -2,6 +2,7 @@ package csd230.lab1.entities;
 
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
+
 @Entity @DiscriminatorValue("BOOK")
 public class BookEntity extends PublicationEntity {
     private String author;
