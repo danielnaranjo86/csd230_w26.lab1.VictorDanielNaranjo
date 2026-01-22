@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Shopping Cart</title>
+</head>
+<body>
+
+<h1>Your Shopping Cart</h1>
+
+<div th:if="${cart.products.empty}">
+    <p>Your cart is empty.</p>
+</div>
+
+<table border="1" th:unless="${cart.products.empty}">
+    <thead>
+    <tr>
+        <th>Item</th>
+        <th>Details</th>
+        <th>Price</th>
+        <th>Action</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    <tr th:each="product : ${cart.products}">
+
+        <!-- ================= PUBLICATIONS ================= -->
+        <td th:if="${product instanceof T(csd230.lab1.entities.PublicationEntity)}"
+            th:text="Publication">
+        </td>
+
+        <td th:if="${product instanceof T(csd230.lab1.entities.PublicationEntity)}"
+            th:text="'Title: ' + ${product.title} + ', Copies: ' + ${product.copies}">
+        </td>
+
+        <!-- ================= ELECTRONICS ================= -->
+        <td th:if="${product instanceof T(csd230.lab1.entities.InstrumentEntity)}"
+            th:text="'Musical Instrument'">
+        </td>
+
+        <td th:if="${product instanceof T(csd230.lab1.entities.InstrumentEntity)}"
+            th:text="'Brand: ' + ${product.brand} + ', Price: $' + ${product.price}">
+        </td>
+
+        <!-- ================= TICKETS ================= -->
+        <td th:if="${product instanceof T(csd230.lab1.entities.TicketEntity)}"
+            th:text="'Ticket'">
+        </td>
+
+        <td th:if="${product instanceof T(csd230.lab1.entities.TicketEntity)}"
+            th:text="${product.description}">
+        </td>
+
+        <!-- ================= PRICE (COMMON) ================= -->
+        <td th:text="${product.price}"></td>
+
+        <!-- ================= ACTION ================= -->
+        <td>
+            <a th:href="@{/cart/remove/{id}(id=${product.id})}">Remove</a>
+        </td>
+
+    </tr>
+    </tbody>
+</table>
+
+
+
+<p>
+    <a th:href="@{/books}">Continue Shopping</a>
+</p>
+
+</body>
+</html>

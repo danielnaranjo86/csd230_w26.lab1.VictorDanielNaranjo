@@ -5,6 +5,11 @@
 </head>
 <body>
 <h1>Book List</h1>
+
+<!-- Link to View Cart (Added in Lecture 2.5.1) -->
+<p>
+    <a th:href="@{/cart}">View Cart</a>
+</p>
 <table border="1">
     <thead>
     <tr>
@@ -22,13 +27,18 @@
         <td th:text="${book.price}"></td>
         <td th:text="${book.copies}"></td>
         <td>
-            <a th:href="@{/books/{id}(id=${book.id})}">Details</a>
-            <a th:href="@{/books/edit/{id}(id=${book.id})}">Edit</a>
-            <a th:href="@{/books/delete/{id}(id=${book.id})}">Delete</a>
+            <!-- CRUD Actions -->
+            <a th:href="@{/books/{id}(id=${book.id})}">Details</a> |
+            <a th:href="@{/books/edit/{id}(id=${book.id})}">Edit</a> |
+            <a th:href="@{/books/delete/{id}(id=${book.id})}">Delete</a> |
+
+            <!-- Add to Cart Action (Added in Lecture 2.5.1) -->
+            <strong><a th:href="@{/cart/add/{id}(id=${book.id})}">Add to Cart</a></strong>
         </td>
     </tr>
     </tbody>
 </table>
+
 <br/>
 <a th:href="@{/books/add}">Add New Book</a>
 </body>
