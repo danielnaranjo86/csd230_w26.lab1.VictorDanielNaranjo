@@ -1,88 +1,80 @@
 classDiagram
+    direction TB
 
-%% ===== Interfaces =====
+%% =======================
+%% Core domain interfaces
+%% =======================
     class SaleableItem {
         <<interface>>
         +sellItem()
-        +getPrice()
+        +getPrice() double
     }
 
-    class Serializable {
-        <<interface>>
-    }
-
-%% ===== Core Product Hierarchy =====
+%% =======================
+%% Entities (JPA Layer)
+%% =======================
     class ProductEntity {
         <<abstract>>
         -Long id
+        +getId() Long
+        +getPrice() double
+        +sellItem()
     }
-
-    ProductEntity ..|> SaleableItem
-    ProductEntity ..|> Serializable
 
     class PublicationEntity {
         <<abstract>>
         -String title
-        -double pubPrice
+        -double price
         -int copies
-        +getPrice()
-    }
-
-    ProductEntity <|-- PublicationEntity
-
-    class BookEntity {
-        -String author
-    }
-
-    PublicationEntity <|-- BookEntity
-
-    class MagazineEntity {
-        -int orderQty
-        -LocalDateTime currentIssue
-    }
-
-    PublicationEntity <|-- MagazineEntity
-
-    class DiscMagEntity {
-        -boolean hasDisc
-    }
-
-    MagazineEntity <|-- DiscMagEntity
-
-    class TicketEntity {
-        -String description
-        -double ticketPrice
+        +getTitle() String
+        +getCopies() int
+        +getPrice() double
         +sellItem()
     }
 
-    ProductEntity <|-- TicketEntity
+    class BookEntity
+    class MagazineEntity
+    class DiscMagEntity
+    class TicketEntity
 
-%% ===== Cart (Many-to-Many) =====
-    class CartEntity {
-        -Long id
-    }
-
-    CartEntity "*" -- "*" ProductEntity : contains
-
-%% ===== Niche: Musical Instruments =====
     class InstrumentEntity {
         <<abstract>>
         -String brand
-        -String model
+        -double price
+        +getBrand() String
+        +getPrice() double
     }
 
+    class GuitarEntity
+    class DrumKitEntity
+
+    class CartEntity {
+        -Long id
+        +addProduct(ProductEntity)
+        +removeProduct(ProductEntity)
+    }
+
+    class OrderEntity {
+        -Long id
+        -LocalDateTime orderDate
+        -double totalAmount
+        +addProduct(ProductEntity)
+    }
+
+%% =======================
+%% Relationships
+%% =======================
+    SaleableItem <|.. ProductEntity
+
+    ProductEntity <|-- PublicationEntity
+    PublicationEntity <|-- BookEntity
+    PublicationEntity <|-- MagazineEntity
+    MagazineEntity <|-- DiscMagEntity
+
+    ProductEntity <|-- TicketEntity
     ProductEntity <|-- InstrumentEntity
-
-    class GuitarEntity {
-        -int numberOfStrings
-        -boolean electric
-    }
-
     InstrumentEntity <|-- GuitarEntity
-
-    class DrumKitEntity {
-        -int numberOfDrums
-        -boolean acoustic
-    }
-
     InstrumentEntity <|-- DrumKitEntity
+
+    CartEntity "1" -- "*" ProductEntity : Many-to-Many
+    OrderEntity "1" -- "*" ProductEntity : Many-to-Many
