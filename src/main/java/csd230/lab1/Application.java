@@ -1,14 +1,21 @@
 package csd230.lab1;
 
+import com.github.javafaker.Book;
+import com.github.javafaker.Commerce;
 import com.github.javafaker.Faker;
+import com.github.javafaker.Number;
 import csd230.lab1.entities.*;
 import csd230.lab1.repositories.*;
+import csd230.lab1.pojos.*;
 import jakarta.transaction.Transactional;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @SpringBootApplication
 public class Application implements CommandLineRunner {
@@ -19,17 +26,25 @@ public class Application implements CommandLineRunner {
     private final TicketEntityRepository ticketRepo;
     private final GuitarEntityRepository guitarRepo;
     private final DrumKitEntityRepository drumKitRepo;
+    private final UserEntityRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public Application(ProductEntityRepository productRepo,
                        CartEntityRepository cartRepo,
                        BookEntityRepository bookRepo,
-                       TicketEntityRepository ticketRepo, GuitarEntityRepository guitarRepo, DrumKitEntityRepository drumKitRepo) {
+                       TicketEntityRepository ticketRepo,
+                       GuitarEntityRepository guitarRepo,
+                       DrumKitEntityRepository drumKitRepo,
+                       UserEntityRepository userRepository,
+                       PasswordEncoder passwordEncoder) {
         this.productRepo = productRepo;
         this.cartRepo = cartRepo;
         this.bookRepo = bookRepo;
         this.ticketRepo = ticketRepo;
         this.guitarRepo = guitarRepo;
         this.drumKitRepo = drumKitRepo;
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
 
@@ -42,6 +57,13 @@ public class Application implements CommandLineRunner {
     public void run(String... args) {
 
         Faker faker = new Faker();
+
+        Commerce cm = faker.commerce();
+        Number number = faker.number();
+        Book fakeBook = faker.book();
+        String name = cm.productName();
+        String description = cm.material();
+        String priceString = faker.commerce().price();
 
         // -------------------------
         // CREATE
@@ -147,5 +169,44 @@ public class Application implements CommandLineRunner {
 
         System.out.println("\n--- PRODUCTS AFTER DELETE ---");
         productRepo.findAll().forEach(System.out::println);
+
+        MagazineEntity magazine = new MagazineEntity(
+                faker.lorem().word() + " Magazine",
+                12.99,
+                20,
+                50,
+                LocalDateTime.now()
+        );
+
+        // productRepository.save(book);
+
+        for (ProductEntity p : allProducts) {
+            System.out.println(p.toString());
+        }
+        List<CartEntity> allCarts = cartRepo.findAll();
+        for (CartEntity c : allCarts) {
+            System.out.println(c.toString());
+            for (ProductEntity p : c.getProducts()) {
+                System.out.println(p.toString());
+            }
+        }
+
+
+        // ------------------------------------
+        // CREATE USERS (Lecture 2.6)
+        // ------------------------------------
+
+
+        // Admin User (Can Add/Edit/Delete)
+        UserEntity admin = new UserEntity("admin", passwordEncoder.encode("admin"), "ADMIN");
+        userRepository.save(admin);
+
+
+        // Regular User (Can only View/Buy)
+        UserEntity user = new UserEntity("user", passwordEncoder.encode("user"), "USER");
+        userRepository.save(user);
+
+
+        System.out.println("Default users created: admin/admin and user/user");
     }
 }
