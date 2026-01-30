@@ -40,13 +40,26 @@ public class CartController {
 
     @GetMapping("/add/{productId}")
     public String addToCart(@PathVariable Long productId) {
-        CartEntity cart = getOrCreateCart();
+
+        CartEntity cart = cartRepository.findById(DEFAULT_CART_ID).orElse(null);
         ProductEntity product = productRepository.findById(productId).orElse(null);
 
-        if (product != null) {
-            cart.addProduct(product);
-            cartRepository.save(cart);
+        if (cart == null || product == null) {
+            return "redirect:/products";
         }
+
+        // 🔒 BLOCK out-of-stock publications
+        if (product instanceof PublicationEntity pub) {
+            if (pub.getCopies() <= 0) {
+                // optional: log or flash message
+                System.out.println("Out of stock: " + pub.getTitle());
+                return "redirect:/books";
+            }
+        }
+
+        cart.addProduct(product);
+        cartRepository.save(cart);
+
         return "redirect:/cart";
     }
 
