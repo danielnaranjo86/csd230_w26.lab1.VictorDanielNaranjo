@@ -35,6 +35,9 @@ public class WebSecurityConfig {
                         // 2. Admin only endpoints (CRUD operations on books)
                         .requestMatchers("/books/add", "/books/edit/**", "/books/delete/**").hasRole("ADMIN")
 
+                        // Allow public access to register as well
+                        .requestMatchers("/h2-console/**", "/login", "/register", "/css/**", "/js/**").permitAll()
+
                         // 3. All other requests (view books, cart) require login
                         .anyRequest().authenticated()
                 )
