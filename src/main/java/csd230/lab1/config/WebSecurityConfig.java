@@ -29,14 +29,22 @@ public class WebSecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests((requests) -> requests
-                        // Existing public endpoints
-                        .requestMatchers("/h2-console/**", "/login", "/css/**", "/js/**").permitAll()
+                        // 1. Allow public access to specific endpoints
+                        .requestMatchers("/h2-console/**",
+                                "/login",
+                                "/css/**",
+                                "/js/**",
+                                "/api/rest/**"           // allow unrestricted access to rest api for testing
+
+                        ).permitAll()
 
                         // --- ADD THESE LINES FOR SWAGGER ---
                         .requestMatchers(
-                                "/v3/api-docs/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html"
+                                "/v3/api-docs",          // The actual JSON data
+                                "/v3/api-docs/**",       // Support for groups
+                                "/swagger-ui/**",        // UI static resources
+                                "/swagger-ui.html",      // UI entry point
+                                "/v3/api-docs.yaml"     // YAML version
                         ).permitAll()
                         // ------------------------------------
                         // Admin only
