@@ -1,6 +1,5 @@
 package csd230.lab1.config;
 
-
 import csd230.lab1.services.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,6 +10,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
 @EnableWebSecurity
@@ -28,48 +28,44 @@ public class WebSecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .authorizeHttpRequests((requests) -> requests
-                        // 1. Allow public access to specific endpoints
-                        .requestMatchers("/h2-console/**",
-                                "/login",
-                                "/css/**",
-                                "/js/**",
-                                "/api/rest/**"           // allow unrestricted access to rest api for testing
+                .authorizeHttpRequests(auth -> auth
+                        // Public static + login + h2
+                        .requestMatchers("/h2-console/**", "/login", "/css/**", "/js/**").permitAll()
 
-                        ).permitAll()
+                        // Swagger/OpenAPI
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
 
-                        // --- ADD THESE LINES FOR SWAGGER ---
-                        .requestMatchers(
-                                "/v3/api-docs",          // The actual JSON data
-                                "/v3/api-docs/**",       // Support for groups
-                                "/swagger-ui/**",        // UI static resources
-                                "/swagger-ui.html",      // UI entry point
-                                "/v3/api-docs.yaml"     // YAML version
-                        ).permitAll()
-                        // ------------------------------------
-                        // Admin only
+                        // ✅ REST API OPEN (all verbs)
+                        .requestMatchers("/api/rest/**").permitAll()
+
+                        .requestMatchers("/error").permitAll()
+
+                        // Admin-only Thymeleaf pages
                         .requestMatchers("/books/add", "/books/edit/**", "/books/delete/**").hasRole("ADMIN")
-                        // All others
+
+                        // Everything else needs login
                         .anyRequest().authenticated()
                 )
-                .formLogin((form) -> form
+                .formLogin(form -> form
                         .loginPage("/login")
                         .defaultSuccessUrl("/books", true)
                         .permitAll()
                 )
-                .logout((logout) -> logout
+                .logout(logout -> logout
                         .logoutUrl("/logout")
                         .logoutSuccessUrl("/login?logout")
                         .permitAll()
                 );
 
+        // H2 console frames
+        http.headers(headers -> headers.frameOptions(frame -> frame.disable()));
 
-        // Required for H2 Console to work with Spring Security (it uses frames)
-        http.headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()));
+        // ✅ Don’t disable CSRF globally; just ignore it for API + H2
+        http.csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**", "/api/rest/**"));
 
-        // Disable CSRF specifically for H2 Console
-        http.csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**","/api/rest/**"));
-
+        // ✅ Optional: you can REMOVE httpBasic entirely for the lab
+        // (it’s not needed if /api/rest/** is permitAll)
+        // http.httpBasic(withDefaults());
 
         return http.build();
     }
@@ -88,4 +84,5 @@ public class WebSecurityConfig {
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }
+
 }

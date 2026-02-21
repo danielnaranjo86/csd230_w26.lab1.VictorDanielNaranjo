@@ -69,12 +69,11 @@ public class Application implements CommandLineRunner {
             String priceString = faker.commerce().price();
 
             // Create the book entity with the random data
-            BookEntity book = new BookEntity(
-                    title,
-                    Double.parseDouble(priceString),
-                    10,      // Defaulting to 10 copies each
-                    author
-            );
+            BookEntity book = new BookEntity();
+            book.setTitle(title);
+            book.setPrice(Double.parseDouble(priceString));
+            book.setCopies(10);
+            book.setAuthor(author);
 
             // Save to database
             productRepository.save(book);
