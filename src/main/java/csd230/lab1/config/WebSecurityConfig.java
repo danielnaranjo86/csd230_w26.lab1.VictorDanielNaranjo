@@ -1,34 +1,33 @@
 package csd230.lab1.config;
 
-import csd230.lab1.auth.JwtAuthorizationFilter; // NEW
+import csd230.lab1.auth.JwtAuthorizationFilter;
 import csd230.lab1.services.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.authentication.AuthenticationManager; // NEW
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration; // NEW
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter; // NEW
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
 public class WebSecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
-    private final JwtAuthorizationFilter jwtAuthorizationFilter; // NEW: Added
+    private final JwtAuthorizationFilter jwtAuthorizationFilter;
 
     public WebSecurityConfig(CustomUserDetailsService userDetailsService, JwtAuthorizationFilter jwtAuthorizationFilter) {
         this.userDetailsService = userDetailsService;
         this.jwtAuthorizationFilter = jwtAuthorizationFilter;
     }
 
-    // NEW: AuthenticationManager is needed by AuthController to verify login credentials
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
@@ -37,48 +36,38 @@ public class WebSecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                // 1. Enable CORS for React/Vite communication
+                .cors(Customizer.withDefaults())
+
+                // 2. Disable CSRF for the REST API (Required for POST/DELETE from React)
+                .csrf(csrf -> csrf.disable())
+
                 .authorizeHttpRequests((requests) -> requests
-                        // 1. Public endpoints
-                        .requestMatchers("/h2-console/**", "/login", "/css/**", "/js/**").permitAll()
-                        .requestMatchers("/api/rest/auth/**").permitAll() // NEW: Must permit JWT Login path
+                        // Public Assets
+                        .requestMatchers("/h2-console/**", "/login", "/css/**", "/js/**", "/images/**").permitAll()
+                        .requestMatchers("/api/rest/auth/**", "/error").permitAll()
 
-                        // Swagger remains public
-                        .requestMatchers(
-                                "/v3/api-docs", "/v3/api-docs/**",
-                                "/swagger-ui/**", "/swagger-ui.html"
-                        ).permitAll()
+                        // --- REACT LAB: ALLOW ALL REST API TRAFFIC TEMPORARILY ---
+                        .requestMatchers("/api/rest/**").permitAll()
 
-                        // 2. REST API Security (JWT/Basic)
-                        .requestMatchers(HttpMethod.GET, "/api/rest/**").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers("/api/rest/**").hasRole("ADMIN")
+                        // Swagger
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
 
-                        // 3. Web UI Admin endpoints
+                        // Traditional Web UI Security
                         .requestMatchers("/books/add", "/books/edit/**", "/books/delete/**").hasRole("ADMIN")
 
-                        // 4. All other requests require login
                         .anyRequest().authenticated()
                 )
-                // NEW: Add the JWT filter before the standard login filter
                 .addFilterBefore(jwtAuthorizationFilter, UsernamePasswordAuthenticationFilter.class)
-
-                .httpBasic(Customizer.withDefaults())
                 .formLogin((form) -> form
                         .loginPage("/login")
                         .defaultSuccessUrl("/books", true)
                         .permitAll()
                 )
-                .logout((logout) -> logout
-                        .logoutUrl("/logout")
-                        .logoutSuccessUrl("/login?logout")
-                        .permitAll()
-                );
+                .logout((logout) -> logout.permitAll());
 
+        // For H2 Console
         http.headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()));
-
-        // Keep CSRF ignored for REST API so JWT (Postman) works without CSRF tokens
-        http.csrf(csrf -> csrf
-                .ignoringRequestMatchers("/h2-console/**", "/api/rest/**")
-        );
 
         return http.build();
     }
@@ -90,7 +79,6 @@ public class WebSecurityConfig {
 
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
-        // FIX: Pass userDetailsService to the constructor
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
