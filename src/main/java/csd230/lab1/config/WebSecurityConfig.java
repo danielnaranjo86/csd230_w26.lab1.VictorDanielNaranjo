@@ -68,7 +68,7 @@ public class WebSecurityConfig {
         http.headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()));
 
         // Disable CSRF specifically for H2 Console
-        http.csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**"));
+        http.csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**","/api/rest/**"));
 
 
         return http.build();
